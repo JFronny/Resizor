@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29230.47
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Resizor", "Resizor\Resizor.csproj", "{EED8B478-D539-41D2-9A39-8349099B298A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CC-Functions.W32", "..\CC-Functions.W32\CC-Functions.W32\CC-Functions.W32.csproj", "{CAE1CDB1-057D-4A4C-80D1-A7912715B79C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "W32", "..\CC-Functions\W32\W32.csproj", "{23DE4AE0-5075-4CCC-8440-4D131CA0FBBA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{EED8B478-D539-41D2-9A39-8349099B298A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EED8B478-D539-41D2-9A39-8349099B298A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EED8B478-D539-41D2-9A39-8349099B298A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CAE1CDB1-057D-4A4C-80D1-A7912715B79C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CAE1CDB1-057D-4A4C-80D1-A7912715B79C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CAE1CDB1-057D-4A4C-80D1-A7912715B79C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CAE1CDB1-057D-4A4C-80D1-A7912715B79C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23DE4AE0-5075-4CCC-8440-4D131CA0FBBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23DE4AE0-5075-4CCC-8440-4D131CA0FBBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23DE4AE0-5075-4CCC-8440-4D131CA0FBBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23DE4AE0-5075-4CCC-8440-4D131CA0FBBA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

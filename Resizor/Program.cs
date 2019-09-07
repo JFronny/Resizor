@@ -75,7 +75,6 @@ namespace Resizor
                 }
                 for (int i = 0; i < toRemove.Count; i++)
                     windowSizeSetters.RemoveAt(toRemove[i]);
-                Console.WriteLine(windowSizeSetters.Count.ToString());
             }
         }
     }

@@ -93,13 +93,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\CC-Functions.W32\CC-Functions.W32\CC-Functions.W32.csproj">
-      <Project>{cae1cdb1-057d-4a4c-80d1-a7912715b79c}</Project>
-      <Name>CC-Functions.W32</Name>
-    </ProjectReference>
+    <Content Include="Resizor.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resizor.ico" />
+    <ProjectReference Include="..\..\CC-Functions\W32\W32.csproj">
+      <Project>{23de4ae0-5075-4ccc-8440-4d131ca0fbba}</Project>
+      <Name>W32</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
