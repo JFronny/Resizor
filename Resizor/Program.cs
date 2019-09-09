@@ -1,7 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Security.AccessControl;
+using System.Security.Principal;
+using System.Threading;
 using System.Windows.Forms;
 using CC_Functions.W32;
 using Resizor.Properties;
@@ -13,39 +19,71 @@ namespace Resizor
     {
         public static KeyboardHook kh;
         public static NIApplicationContext ctx;
+        public static immResize rez;
         [STAThread]
         static void Main()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            notifyIcon1 = new NotifyIcon();
-            ContextMenu contextMenu = new ContextMenu();
-            MenuItem settings = new MenuItem();
-            MenuItem exititem = new MenuItem();
-            contextMenu.MenuItems.AddRange(new MenuItem[] { settings, exititem });
-            settings.Index = 0;
-            settings.Text = "Settings";
-            settings.Click += new EventHandler(openSettings);
-            exititem.Index = 1;
-            exititem.Text = "Exit";
-            exititem.Click += new EventHandler(exit);
-            notifyIcon1.Icon = Resources.Resizor;
-            notifyIcon1.Text = "Resizor";
-            notifyIcon1.ContextMenu = contextMenu;
-            notifyIcon1.Visible = true;
-            kh = new KeyboardHook();
-            kh.OnKeyPress += keyDown;
-            ctx = new NIApplicationContext();
-            Application.Run(ctx);
-            kh.Dispose();
-
+            string appGuid = ((GuidAttribute)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(GuidAttribute), false).GetValue(0)).Value.ToString();
+            string mutexId = string.Format("Global\\{{{0}}}", appGuid);
+            bool createdNew;
+            var allowEveryoneRule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.FullControl, AccessControlType.Allow);
+            var securitySettings = new MutexSecurity();
+            securitySettings.AddAccessRule(allowEveryoneRule);
+            using (var mutex = new Mutex(false, mutexId, out createdNew, securitySettings))
+            {
+                var hasHandle = false;
+                try
+                {
+                    try
+                    {
+                        hasHandle = mutex.WaitOne(5000, false);
+                        if (hasHandle == false)
+                            throw new TimeoutException("Timeout waiting for exclusive access");
+                    }
+                    catch (AbandonedMutexException)
+                    {
+#if DEBUG
+                        Console.WriteLine("Mutex abandoned");
+#endif
+                        hasHandle = true;
+                    }
+                    notifyIcon1 = new NotifyIcon();
+                    ContextMenu contextMenu = new ContextMenu();
+                    MenuItem settings = new MenuItem();
+                    MenuItem exititem = new MenuItem();
+                    contextMenu.MenuItems.AddRange(new MenuItem[] { settings, exititem });
+                    settings.Index = 0;
+                    settings.Text = "Settings";
+                    settings.Click += new EventHandler(openSettings);
+                    exititem.Index = 1;
+                    exititem.Text = "Exit";
+                    exititem.Click += new EventHandler(exit);
+                    notifyIcon1.Icon = Resources.Resizor;
+                    notifyIcon1.Text = "Resizor";
+                    notifyIcon1.ContextMenu = contextMenu;
+                    notifyIcon1.Visible = true;
+                    kh = new KeyboardHook();
+                    kh.OnKeyPress += keyDown;
+                    ctx = new NIApplicationContext();
+                    Application.Run(ctx);
+                    kh.Dispose();
+                }
+                finally
+                {
+                    if (hasHandle)
+                        mutex.ReleaseMutex();
+                }
+            }
         }
 
         private static void keyDown(KeyboardHookEventArgs e)
         {
-            if (e.Key == Settings.Default.ImmediateResizeKey)
+            if (e.Key == Settings.Default.ImmediateResizeKey && (rez == null || rez.IsDisposed))
             {
-                new immResize().Show();
+                rez = new immResize();
+                rez.Show();
             }
         }
 
