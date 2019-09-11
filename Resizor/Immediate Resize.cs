@@ -20,10 +20,19 @@ namespace Resizor
             prevR = new Rectangle();
             window = Wnd32.foreground();
             InitializeComponent();
+            Program.kh.OnKeyPress += onKeyDown;
             Rectangle tmp = window.position;
             forcePos.Location = new Point(tmp.X + tmp.Width / 2 - forcePos.Width / 2, tmp.Y);
             forcePos.Checked = Program.ctx.windowSizeSetters.Where(Window => Window.Window == window).ToArray().Length > 0;
         }
+
+        private void onKeyDown(KeyboardHookEventArgs _args)
+        {
+            if (_args.Key == Keys.Escape)
+                Close();
+        }
+
+        private void ImmResize_FormClosed(object sender, FormClosedEventArgs e) => Program.kh.OnKeyPress -= onKeyDown;
 
         private void Form1_Load(object sender, EventArgs e)
         {
