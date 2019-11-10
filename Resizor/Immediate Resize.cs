@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using CC_Functions.W32;
@@ -22,7 +23,7 @@ namespace Resizor
             InitializeComponent();
             Program.kh.OnKeyPress += onKeyDown;
             Rectangle tmp = window.position;
-            forcePos.Location = new Point(tmp.X + tmp.Width / 2 - forcePos.Width / 2, tmp.Y);
+            forcePos.Location = new Point((tmp.X + (tmp.Width / 2)) - (forcePos.Width / 2), tmp.Y);
             forcePos.Checked = Program.ctx.windowSizeSetters.Where(Window => Window.Window == window).ToArray().Length > 0;
         }
 
@@ -44,6 +45,11 @@ namespace Resizor
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.None;
+            g.InterpolationMode = InterpolationMode.Low;
+            g.CompositingMode = CompositingMode.SourceCopy;
+            g.CompositingQuality = CompositingQuality.HighSpeed;
+            g.PixelOffsetMode = PixelOffsetMode.None;
             PointF divisor = Settings.Default.ResizeDividor;
             Rectangle rect;
             if (down)
@@ -62,6 +68,7 @@ namespace Resizor
                 g.DrawLine(gridPen, 0, y * div.Y, screen.Width, y * div.Y);
             }
             g.DrawRectangle(new Pen(Color.Blue, 2), rect);
+            g.DrawRectangle(new Pen(Color.Red, 2), window.position);
         }
         PointF getDiv() => new PointF(screen.Width / Settings.Default.ResizeDividor.X, screen.Height / Settings.Default.ResizeDividor.Y);
         Rectangle CRect() => p2r(f2s(MousePosition, getDiv()), c2s(MousePosition, getDiv()));
@@ -106,19 +113,27 @@ namespace Resizor
 
         private void Form1_MouseUp(object sender, MouseEventArgs e)
         {
-            Rectangle rect = FRect();
-            window.position = rect;
-            if (forcePos.Checked)
-                WindowSizeSetter.make(window, rect);
+            window.position = FRect();
             Close();
         }
 
         private void ForcePos_CheckedChanged(object sender, EventArgs e)
         {
-            if ((!forcePos.Checked) && Program.ctx.windowSizeSetters.Where(Window => Window.Window == window).ToArray().Length > 0)
+            if (forcePos.Checked)
             {
-                WindowSizeSetter.TryRemove(window);
-                Close();
+                if (Program.ctx.windowSizeSetters.Where(Window => Window.Window == window).ToArray().Length == 0)
+                {
+                    WindowSizeSetter.make(window, window.position);
+                    Close();
+                }
+            }
+            else
+            {
+                if (Program.ctx.windowSizeSetters.Where(Window => Window.Window == window).ToArray().Length > 0)
+                {
+                    WindowSizeSetter.TryRemove(window);
+                    Close();
+                }
             }
         }
     }

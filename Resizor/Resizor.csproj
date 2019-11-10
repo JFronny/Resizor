@@ -63,6 +63,7 @@
     <Compile Include="SettingsForm.Designer.cs">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="WindowSizeSetter.cs" />
     <EmbeddedResource Include="Immediate Resize.resx">
       <DependentUpon>Immediate Resize.cs</DependentUpon>
     </EmbeddedResource>
