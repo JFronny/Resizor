@@ -109,7 +109,10 @@ namespace Resizor
 
         private void Form1_MouseUp(object sender, MouseEventArgs e)
         {
-            _window.Position = FRect();
+            Rectangle tmp = FRect();
+            _window.Position = tmp;
+            if (forcePos.Checked)
+                WindowSizeSetter.Make(_window, tmp);
             Close();
         }
 
