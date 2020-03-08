@@ -25,7 +25,7 @@ jobs:
         & "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe" -noLogo -verbosity:m -p:Configuration=Release
         cp *\bin\Release\netcoreapp3.1\package.zip .
         $file = Get-Item $(Resolve-Path *\bin\Release\netcoreapp3.1\*.exe).Path
-        $asm = $([Reflection.Assembly]::ReflectionOnlyLoadFrom($file.DirectoryName + "\" + $file.BaseName + ".dll"))
+        $asm = $([Reflection.Assembly]::LoadFile($file.DirectoryName + "\" + $file.BaseName + ".dll"))
         $asmver = $asm.GetName().Version.ToString()
         echo "::set-output name=vers::$asmver"
     - name: Create Release
@@ -52,7 +52,7 @@ jobs:
       id: make_xml
       run: |
         $file = Get-Item $(Resolve-Path *\bin\Release\netcoreapp3.1\*.exe).Path
-        $asm = [Reflection.Assembly]::ReflectionOnlyLoadFrom($file.DirectoryName + "\" + $file.BaseName + ".dll")
+        $asm = [Reflection.Assembly]::LoadFile($file.DirectoryName + "\" + $file.BaseName + ".dll")
         [System.XML.XMLDocument]$xml=New-Object System.XML.XMLDocument
         [System.XML.XMLElement]$app=$xml.CreateElement("app")
         $xml.appendChild($app)
