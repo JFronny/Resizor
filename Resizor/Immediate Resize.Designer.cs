@@ -1,6 +1,6 @@
 ﻿namespace Resizor
 {
-    partial class immResize
+    partial class ImmResize
     {
         /// <summary>
         /// Required designer variable.
@@ -55,7 +55,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "immResize";
+            this.Name = "ImmResize";
             this.Opacity = 0.5D;
             this.ShowIcon = false;
             this.ShowInTaskbar = false;

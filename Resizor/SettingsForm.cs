@@ -1,33 +1,34 @@
-﻿using CC_Functions.W32;
-using System;
+﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using Resizor.Properties;
+using CC_Functions.W32.Hooks;
 using Microsoft.Win32;
+using Resizor.Properties;
 
 namespace Resizor
 {
     public partial class SettingsForm : Form
     {
-        RegistryKey rkApp;
-        string appName = "Rasizor";
+        private const string AppName = "Resizor";
+        private readonly RegistryKey _rkApp;
+
         public SettingsForm()
         {
             InitializeComponent();
-            Program.kh = new KeyboardHook();
+            Program.Kh = new KeyboardHook();
             keySelectButton.Text = Settings.Default.ImmediateResizeKey.ToString();
             keySelectButton.Tag = false;
             rowsSelect.Value = Settings.Default.ResizeDividor.Y;
             columnsSelect.Value = Settings.Default.ResizeDividor.X;
-            rkApp = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
-            startupBox.Checked = rkApp.GetValue(appName) != null;
+            _rkApp = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
+            startupBox.Checked = _rkApp.GetValue(AppName) != null;
         }
 
         private void KeySelectButton_Click(object sender, EventArgs e)
         {
-            if ((bool)keySelectButton.Tag)
+            if ((bool) keySelectButton.Tag)
             {
-                Program.kh.OnKeyPress -= Hook_OnKeyPress;
+                Program.Kh.OnKeyPress -= Hook_OnKeyPress;
                 keySelectButton.BackColor = SystemColors.Control;
                 keySelectButton.Tag = false;
                 keySelectButton.Text = Settings.Default.ImmediateResizeKey.ToString();
@@ -37,13 +38,13 @@ namespace Resizor
                 keySelectButton.BackColor = Color.Red;
                 keySelectButton.Text = "Cancel";
                 keySelectButton.Tag = true;
-                Program.kh.OnKeyPress += Hook_OnKeyPress;
+                Program.Kh.OnKeyPress += Hook_OnKeyPress;
             }
         }
 
         private void Hook_OnKeyPress(KeyboardHookEventArgs e)
         {
-            Program.kh.OnKeyPress -= Hook_OnKeyPress;
+            Program.Kh.OnKeyPress -= Hook_OnKeyPress;
             keySelectButton.BackColor = SystemColors.Control;
             if (e.Key != Keys.Escape)
             {
@@ -57,7 +58,7 @@ namespace Resizor
         private void RowsSelect_ValueChanged(object sender, EventArgs e)
         {
             Point tmp = Settings.Default.ResizeDividor;
-            tmp.Y = (int)rowsSelect.Value;
+            tmp.Y = (int) rowsSelect.Value;
             Settings.Default.ResizeDividor = tmp;
             Settings.Default.Save();
         }
@@ -65,7 +66,7 @@ namespace Resizor
         private void ColumnsSelect_ValueChanged(object sender, EventArgs e)
         {
             Point tmp = Settings.Default.ResizeDividor;
-            tmp.X = (int)columnsSelect.Value;
+            tmp.X = (int) columnsSelect.Value;
             Settings.Default.ResizeDividor = tmp;
             Settings.Default.Save();
         }
@@ -75,14 +76,14 @@ namespace Resizor
             try
             {
                 if (startupBox.Checked)
-                    rkApp.SetValue(appName, Application.ExecutablePath.ToString());
+                    _rkApp.SetValue(AppName, Application.ExecutablePath);
                 else
-                    rkApp.DeleteValue(appName, false);
-                startupBox.Checked = rkApp.GetValue(appName) != null;
+                    _rkApp.DeleteValue(AppName, false);
+                startupBox.Checked = _rkApp.GetValue(AppName) != null;
             }
             catch (Exception e1)
             {
-                startupBox.Checked = rkApp.GetValue(appName) != null;
+                startupBox.Checked = _rkApp.GetValue(AppName) != null;
                 MessageBox.Show(e1.ToString(), "Failed");
             }
         }

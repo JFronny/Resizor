@@ -6,111 +6,101 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
-using CC_Functions.W32;
+using CC_Functions.W32.Hooks;
 using Resizor.Properties;
 using Timer = System.Windows.Forms.Timer;
 
 namespace Resizor
 {
-    static class Program
+    internal static class Program
     {
-        public static KeyboardHook kh;
-        public static NIApplicationContext ctx;
-        public static immResize rez;
+        public static KeyboardHook Kh;
+        public static NiApplicationContext Ctx;
+        private static ImmResize _rez;
+
+        private static NotifyIcon _notifyIcon;
+
         [STAThread]
-        static void Main()
+        private static void Main()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            string appGuid = ((GuidAttribute)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(GuidAttribute), false).GetValue(0)).Value.ToString();
-            string mutexId = string.Format("Global\\{{{0}}}", appGuid);
-            bool createdNew;
-            var allowEveryoneRule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.FullControl, AccessControlType.Allow);
-            var securitySettings = new MutexSecurity();
+            string appGuid = ((GuidAttribute) Assembly.GetExecutingAssembly()
+                .GetCustomAttributes(typeof(GuidAttribute), false).GetValue(0)).Value;
+            MutexAccessRule allowEveryoneRule = new MutexAccessRule(
+                new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.FullControl,
+                AccessControlType.Allow);
+            MutexSecurity securitySettings = new MutexSecurity();
             securitySettings.AddAccessRule(allowEveryoneRule);
-            using (var mutex = new Mutex(false, mutexId, out createdNew, securitySettings))
+            using Mutex mutex = new Mutex(false, $"Global\\{{{appGuid}}}", out bool _);
+            bool hasHandle = false;
+            try
             {
-                var hasHandle = false;
                 try
                 {
-                    try
-                    {
-                        hasHandle = mutex.WaitOne(5000, false);
-                        if (hasHandle == false)
-                            throw new TimeoutException("Timeout waiting for exclusive access");
-                    }
-                    catch (AbandonedMutexException)
-                    {
-#if DEBUG
-                        Console.WriteLine("Mutex abandoned");
-#endif
-                        hasHandle = true;
-                    }
-                    notifyIcon = new NotifyIcon();
-                    ContextMenu contextMenu = new ContextMenu();
-                    MenuItem settings = new MenuItem();
-                    MenuItem exititem = new MenuItem();
-                    contextMenu.MenuItems.AddRange(new MenuItem[] { settings, exititem });
-                    settings.Index = 0;
-                    settings.Text = "Settings";
-                    settings.Click += new EventHandler(openSettings);
-                    exititem.Index = 1;
-                    exititem.Text = "Exit";
-                    exititem.Click += new EventHandler(exit);
-                    notifyIcon.Icon = Resources.Resizor;
-                    notifyIcon.Text = "Resizor";
-                    notifyIcon.ContextMenu = contextMenu;
-                    notifyIcon.Visible = true;
-                    kh = new KeyboardHook();
-                    kh.OnKeyPress += keyDown;
-                    ctx = new NIApplicationContext();
-                    Application.Run(ctx);
-                    kh.Dispose();
-                    notifyIcon.Visible = false;
+                    hasHandle = mutex.WaitOne(5000, false);
+                    if (hasHandle == false)
+                        throw new TimeoutException("Timeout waiting for exclusive access");
                 }
-                finally
+                catch (AbandonedMutexException)
                 {
-                    if (hasHandle)
-                        mutex.ReleaseMutex();
+#if DEBUG
+                    Console.WriteLine("Mutex abandoned");
+#endif
+                    hasHandle = true;
                 }
+                _notifyIcon = new NotifyIcon();
+                ContextMenuStrip contextMenu = new ContextMenuStrip();
+                contextMenu.Items.Add("Settings").Click += OpenSettings;
+                contextMenu.Items.Add("Exit").Click += Exit;
+                _notifyIcon.Icon = Resources.Resizor;
+                _notifyIcon.Text = "Resizor";
+                _notifyIcon.ContextMenuStrip = contextMenu;
+                _notifyIcon.Visible = true;
+                Kh = new KeyboardHook();
+                Kh.OnKeyPress += KeyDown;
+                Ctx = new NiApplicationContext();
+                Application.Run(Ctx);
+                Kh.Dispose();
+                _notifyIcon.Visible = false;
+            }
+            finally
+            {
+                if (hasHandle)
+                    mutex.ReleaseMutex();
             }
         }
 
-        private static void keyDown(KeyboardHookEventArgs e)
+        private static void KeyDown(KeyboardHookEventArgs e)
         {
-            if (e.Key == Settings.Default.ImmediateResizeKey && (rez == null || rez.IsDisposed))
-            {
-                rez = new immResize();
-                rez.Show();
-            }
+            if (e.Key != Settings.Default.ImmediateResizeKey || (_rez != null && !_rez.IsDisposed)) return;
+            _rez = new ImmResize();
+            _rez.Show();
         }
 
-        private static NotifyIcon notifyIcon;
-        private static void openSettings(object sender, EventArgs e) => new SettingsForm().Show();
-        private static void exit(object Sender, EventArgs e) => Application.Exit();
-        public class NIApplicationContext : ApplicationContext
+        private static void OpenSettings(object sender, EventArgs e) => new SettingsForm().Show();
+        private static void Exit(object sender, EventArgs e) => Application.Exit();
+
+        public class NiApplicationContext : ApplicationContext
         {
-            public List<WindowSizeSetter> windowSizeSetters = new List<WindowSizeSetter>();
-            Timer tim;
-            public NIApplicationContext()
+            public readonly List<WindowSizeSetter> WindowSizeSetters = new List<WindowSizeSetter>();
+
+            public NiApplicationContext()
             {
-                tim = new Timer();
-                tim.Enabled = true;
-                tim.Interval = 100;
-                tim.Tick += tick;
+                Timer tim = new Timer {Enabled = true, Interval = 100};
+                tim.Tick += Tick;
             }
-            private void tick(object sender, EventArgs e)
+
+            private void Tick(object sender, EventArgs e)
             {
                 List<int> toRemove = new List<int>();
-                for (int i = 0; i < windowSizeSetters.Count; i++)
-                {
-                    if (windowSizeSetters[i].Window.stillExists)
-                        windowSizeSetters[i].Window.position = windowSizeSetters[i].Pos;
+                for (int i = 0; i < WindowSizeSetters.Count; i++)
+                    if (WindowSizeSetters[i].Window.StillExists)
+                        WindowSizeSetters[i].Window.Position = WindowSizeSetters[i].Pos;
                     else
                         toRemove.Add(i);
-                }
                 for (int i = 0; i < toRemove.Count; i++)
-                    windowSizeSetters.RemoveAt(toRemove[i]);
+                    WindowSizeSetters.RemoveAt(toRemove[i]);
             }
         }
     }

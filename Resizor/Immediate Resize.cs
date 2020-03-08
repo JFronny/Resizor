@@ -1,47 +1,49 @@
 ﻿using System;
-using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using CC_Functions.W32;
+using CC_Functions.W32.Hooks;
 using Resizor.Properties;
 
 namespace Resizor
 {
-    public partial class immResize : Form
+    public partial class ImmResize : Form
     {
-        bool down;
-        Point startP;
-        Wnd32 window;
-        Rectangle prevR;
-        Rectangle screen = Screen.PrimaryScreen.WorkingArea;
-        public immResize()
+        private readonly Wnd32 _window;
+        private bool _down;
+        private Rectangle _prevR;
+        private Rectangle _screen = Screen.PrimaryScreen.WorkingArea;
+        private Point _startP;
+
+        public ImmResize()
         {
-            prevR = new Rectangle();
-            window = Wnd32.foreground();
+            _prevR = new Rectangle();
+            _window = Wnd32.Foreground;
             InitializeComponent();
-            Program.kh.OnKeyPress += onKeyDown;
-            Rectangle tmp = window.position;
+            Program.Kh.OnKeyPress += OnKeyDown;
+            Rectangle tmp = _window.Position;
             forcePos.Location = new Point((tmp.X + (tmp.Width / 2)) - (forcePos.Width / 2), tmp.Y);
-            forcePos.Checked = Program.ctx.windowSizeSetters.Where(Window => Window.Window == window).ToArray().Length > 0;
+            forcePos.Checked = Program.Ctx.WindowSizeSetters.Where(s => s.Window == _window).ToArray().Length > 0;
         }
 
-        private void onKeyDown(KeyboardHookEventArgs _args)
+        private void OnKeyDown(KeyboardHookEventArgs args)
         {
-            if (_args.Key == Keys.Escape)
+            if (args.Key == Keys.Escape)
                 Close();
         }
 
-        private void ImmResize_FormClosed(object sender, FormClosedEventArgs e) => Program.kh.OnKeyPress -= onKeyDown;
+        private void ImmResize_FormClosed(object sender, FormClosedEventArgs e) => Program.Kh.OnKeyPress -= OnKeyDown;
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            Wnd32 self = Wnd32.fromForm(this);
-            self.MakeOverlay();
-            if (self != window)
-                self.isForeground = true;
+            Wnd32 self = this.GetWnd32();
+            self.Overlay = true;
+            if (self != _window)
+                self.IsForeground = true;
         }
+
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
@@ -51,69 +53,63 @@ namespace Resizor
             g.CompositingQuality = CompositingQuality.HighSpeed;
             g.PixelOffsetMode = PixelOffsetMode.None;
             PointF divisor = Settings.Default.ResizeDividor;
-            Rectangle rect;
-            if (down)
-                rect = FRect();
-            else
-                rect = CRect();
+            Rectangle rect = _down ? FRect() : CRect();
             g.FillRectangle(new SolidBrush(Color.LightBlue), rect);
             Pen gridPen = new Pen(Color.Black, 2);
-            PointF div = getDiv();
-            for (int x = 0; x < divisor.X; x++)
-            {
-                g.DrawLine(gridPen, x * div.X, 0, x * div.X, screen.Height);
-            }
-            for (int y = 0; y < divisor.Y; y++)
-            {
-                g.DrawLine(gridPen, 0, y * div.Y, screen.Width, y * div.Y);
-            }
+            PointF div = GetDiv();
+            for (int x = 0; x < divisor.X; x++) g.DrawLine(gridPen, x * div.X, 0, x * div.X, _screen.Height);
+            for (int y = 0; y < divisor.Y; y++) g.DrawLine(gridPen, 0, y * div.Y, _screen.Width, y * div.Y);
             g.DrawRectangle(new Pen(Color.Blue, 2), rect);
-            g.DrawRectangle(new Pen(Color.Red, 2), window.position);
+            g.DrawRectangle(new Pen(Color.Red, 2), _window.Position);
         }
-        PointF getDiv() => new PointF(screen.Width / Settings.Default.ResizeDividor.X, screen.Height / Settings.Default.ResizeDividor.Y);
-        Rectangle CRect() => p2r(f2s(MousePosition, getDiv()), c2s(MousePosition, getDiv()));
-        Rectangle FRect()
+
+        private PointF GetDiv() => new PointF(_screen.Width / (float) Settings.Default.ResizeDividor.X,
+            _screen.Height / (float) Settings.Default.ResizeDividor.Y);
+
+        private Rectangle CRect() => P2R(F2S(MousePosition, GetDiv()), C2S(MousePosition, GetDiv()));
+
+        private Rectangle FRect()
         {
-            Point min = f2s(new Point(Math.Min(MousePosition.X, startP.X), Math.Min(MousePosition.Y, startP.Y)), getDiv());
-            Point max = c2s(new Point(Math.Max(MousePosition.X, startP.X), Math.Max(MousePosition.Y, startP.Y)), getDiv());
-            return p2r(min, max);
+            Point min = F2S(new Point(Math.Min(MousePosition.X, _startP.X), Math.Min(MousePosition.Y, _startP.Y)),
+                GetDiv());
+            Point max = C2S(new Point(Math.Max(MousePosition.X, _startP.X), Math.Max(MousePosition.Y, _startP.Y)),
+                GetDiv());
+            return P2R(min, max);
         }
-        Point f2s(Point p, PointF step) => new Point(f2s(p.X, step.X), f2s(p.Y, step.Y));
-        Point c2s(Point p, PointF step) => new Point(c2s(p.X, step.X), c2s(p.Y, step.Y));
-        Rectangle p2r(Point p1, Point p2) => new Rectangle(Math.Min(p1.X, p2.X), Math.Min(p1.Y, p2.Y), Math.Abs(p1.X - p2.X), Math.Abs(p1.Y - p2.Y));
-        int f2s(int f, double step) => (int)d2f(Math.Floor(f / step) * step);
-        int c2s(int f, double step) => (int)d2f(Math.Ceiling(f / step) * step);
-        float d2f(double f)
+
+        private static Point F2S(Point p, PointF step) => new Point(F2S(p.X, step.X), F2S(p.Y, step.Y));
+        private static Point C2S(Point p, PointF step) => new Point(C2S(p.X, step.X), C2S(p.Y, step.Y));
+
+        private static Rectangle P2R(Point p1, Point p2) => new Rectangle(Math.Min(p1.X, p2.X), Math.Min(p1.Y, p2.Y),
+            Math.Abs(p1.X - p2.X), Math.Abs(p1.Y - p2.Y));
+
+        private static int F2S(int f, double step) => (int) D2F(Math.Floor(f / step) * step);
+        private static int C2S(int f, double step) => (int) D2F(Math.Ceiling(f / step) * step);
+
+        private static float D2F(double f)
         {
-            float result = (float)f;
-            if (float.IsPositiveInfinity(result))
-                return float.MaxValue;
-            else if (float.IsNegativeInfinity(result))
-                return float.MinValue;
-            return result;
+            float result = (float) f;
+            return float.IsPositiveInfinity(result) ? float.MaxValue :
+                float.IsNegativeInfinity(result) ? float.MinValue : result;
         }
 
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
-            down = true;
-            startP = MousePosition;
+            _down = true;
+            _startP = MousePosition;
         }
 
         private void Form1_MouseMove(object sender, MouseEventArgs e)
         {
-            Rectangle rect;
-            if (down)
-                rect = FRect();
-            else
-                rect = CRect();
-            if (prevR != rect)
+            Rectangle rect = _down ? FRect() : CRect();
+            if (_prevR != rect)
                 Invalidate();
-            prevR = rect;
+            _prevR = rect;
         }
 
         private void Form1_MouseUp(object sender, MouseEventArgs e)
         {
-            window.position = FRect();
+            _window.Position = FRect();
             Close();
         }
 
@@ -121,19 +117,15 @@ namespace Resizor
         {
             if (forcePos.Checked)
             {
-                if (Program.ctx.windowSizeSetters.Where(Window => Window.Window == window).ToArray().Length == 0)
-                {
-                    WindowSizeSetter.make(window, window.position);
-                    Close();
-                }
+                if (Program.Ctx.WindowSizeSetters.Any(s => s.Window == _window)) return;
+                WindowSizeSetter.Make(_window, _window.Position);
+                Close();
             }
             else
             {
-                if (Program.ctx.windowSizeSetters.Where(Window => Window.Window == window).ToArray().Length > 0)
-                {
-                    WindowSizeSetter.TryRemove(window);
-                    Close();
-                }
+                if (Program.Ctx.WindowSizeSetters.All(s => s.Window != _window)) return;
+                WindowSizeSetter.TryRemove(_window);
+                Close();
             }
         }
     }

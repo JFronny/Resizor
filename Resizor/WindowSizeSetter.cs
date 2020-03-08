@@ -8,40 +8,39 @@ namespace Resizor
     {
         public readonly Wnd32 Window;
         public Rectangle Pos;
-        WindowSizeSetter(Wnd32 window, Rectangle pos)
+
+        private WindowSizeSetter(Wnd32 window, Rectangle pos)
         {
             Window = window;
             Pos = pos;
         }
 
-        public static void make(Wnd32 window, Rectangle pos)
+        public static void Make(Wnd32 window, Rectangle pos)
         {
-            WindowSizeSetter[] match = Program.ctx.windowSizeSetters.Where(Window => Window.Window == window).ToArray();
+            WindowSizeSetter[] match = Program.Ctx.WindowSizeSetters.Where(s => s.Window == window).ToArray();
             switch (match.Length)
             {
                 case 0:
-                    Program.ctx.windowSizeSetters.Add(new WindowSizeSetter(window, pos));
+                    Program.Ctx.WindowSizeSetters.Add(new WindowSizeSetter(window, pos));
                     break;
                 case 1:
                     match[0].Pos = pos;
                     break;
                 default:
                     for (int i = 0; i < match.Length; i++)
-                    {
                         if (i == match.Length - 1)
                             match[0].Pos = pos;
                         else
-                            Program.ctx.windowSizeSetters.Remove(match[i]);
-                    }
+                            Program.Ctx.WindowSizeSetters.Remove(match[i]);
                     break;
             }
         }
 
         public static void TryRemove(Wnd32 window)
         {
-            WindowSizeSetter[] match = Program.ctx.windowSizeSetters.Where(Window => Window.Window == window).ToArray();
+            WindowSizeSetter[] match = Program.Ctx.WindowSizeSetters.Where(s => s.Window == window).ToArray();
             if (match.Length > 0)
-                Program.ctx.windowSizeSetters.RemoveAll(Window => Window.Window == window);
+                Program.Ctx.WindowSizeSetters.RemoveAll(s => s.Window == window);
         }
     }
 }
