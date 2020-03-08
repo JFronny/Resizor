@@ -6,6 +6,9 @@
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
   <PropertyGroup>
+    <PostBuildEvent>if exist "$(ProjectDir)Data\pkgtool.exe" ($(ProjectDir)Data\pkgtool.exe build --noLogo --noShortcuts --binDir .) else if exist "%appdata%\UpTool2\Apps\0e35d154-d0d3-45e0-b080-62f521263a44\app\pkgtool.exe" ("%appdata%\UpTool2\Apps\0e35d154-d0d3-45e0-b080-62f521263a44\app\pkgtool.exe" build --noLogo --noShortcuts --binDir .) else echo Cound not find Package build tools, skipping</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
     <ApplicationIcon>Resizor.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
