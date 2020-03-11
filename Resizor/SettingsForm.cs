@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using CC_Functions.W32.Hooks;
 using Microsoft.Win32;
@@ -76,7 +77,7 @@ namespace Resizor
             try
             {
                 if (startupBox.Checked)
-                    _rkApp.SetValue(AppName, Application.ExecutablePath);
+                    _rkApp.SetValue(AppName, Path.ChangeExtension(Application.ExecutablePath, ".exe"));
                 else
                     _rkApp.DeleteValue(AppName, false);
                 startupBox.Checked = _rkApp.GetValue(AppName) != null;
