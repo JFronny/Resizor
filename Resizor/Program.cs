@@ -73,7 +73,7 @@ namespace Resizor
 
         private static void KeyDown(KeyboardHookEventArgs e)
         {
-            if (e.Key != Settings.Default.ImmediateResizeKey || (_rez != null && !_rez.IsDisposed)) return;
+            if (e.Key != Settings.ImmediateResizeKey || (_rez != null && !_rez.IsDisposed)) return;
             _rez = new ImmResize();
             _rez.Show();
         }

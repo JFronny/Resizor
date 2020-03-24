@@ -4,7 +4,6 @@ using System.IO;
 using System.Windows.Forms;
 using CC_Functions.W32.Hooks;
 using Microsoft.Win32;
-using Resizor.Properties;
 
 namespace Resizor
 {
@@ -17,10 +16,10 @@ namespace Resizor
         {
             InitializeComponent();
             Program.Kh = new KeyboardHook();
-            keySelectButton.Text = Settings.Default.ImmediateResizeKey.ToString();
+            keySelectButton.Text = Settings.ImmediateResizeKey.ToString();
             keySelectButton.Tag = false;
-            rowsSelect.Value = Settings.Default.ResizeDividor.Y;
-            columnsSelect.Value = Settings.Default.ResizeDividor.X;
+            rowsSelect.Value = Settings.ResizeDividor.Y;
+            columnsSelect.Value = Settings.ResizeDividor.X;
             _rkApp = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
             startupBox.Checked = _rkApp.GetValue(AppName) != null;
         }
@@ -32,7 +31,7 @@ namespace Resizor
                 Program.Kh.OnKeyPress -= Hook_OnKeyPress;
                 keySelectButton.BackColor = SystemColors.Control;
                 keySelectButton.Tag = false;
-                keySelectButton.Text = Settings.Default.ImmediateResizeKey.ToString();
+                keySelectButton.Text = Settings.ImmediateResizeKey.ToString();
             }
             else
             {
@@ -49,27 +48,27 @@ namespace Resizor
             keySelectButton.BackColor = SystemColors.Control;
             if (e.Key != Keys.Escape)
             {
-                Settings.Default.ImmediateResizeKey = e.Key;
-                Settings.Default.Save();
+                Settings.ImmediateResizeKey = e.Key;
+                Settings.Save();
             }
-            keySelectButton.Text = Settings.Default.ImmediateResizeKey.ToString();
+            keySelectButton.Text = Settings.ImmediateResizeKey.ToString();
             keySelectButton.Tag = false;
         }
 
         private void RowsSelect_ValueChanged(object sender, EventArgs e)
         {
-            Point tmp = Settings.Default.ResizeDividor;
+            Point tmp = Settings.ResizeDividor;
             tmp.Y = (int) rowsSelect.Value;
-            Settings.Default.ResizeDividor = tmp;
-            Settings.Default.Save();
+            Settings.ResizeDividor = tmp;
+            Settings.Save();
         }
 
         private void ColumnsSelect_ValueChanged(object sender, EventArgs e)
         {
-            Point tmp = Settings.Default.ResizeDividor;
+            Point tmp = Settings.ResizeDividor;
             tmp.X = (int) columnsSelect.Value;
-            Settings.Default.ResizeDividor = tmp;
-            Settings.Default.Save();
+            Settings.ResizeDividor = tmp;
+            Settings.Save();
         }
 
         private void StartupBox_CheckedChanged(object sender, EventArgs e)

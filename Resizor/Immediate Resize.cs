@@ -5,7 +5,6 @@ using System.Linq;
 using System.Windows.Forms;
 using CC_Functions.W32;
 using CC_Functions.W32.Hooks;
-using Resizor.Properties;
 
 namespace Resizor
 {
@@ -52,7 +51,7 @@ namespace Resizor
             g.CompositingMode = CompositingMode.SourceCopy;
             g.CompositingQuality = CompositingQuality.HighSpeed;
             g.PixelOffsetMode = PixelOffsetMode.None;
-            PointF divisor = Settings.Default.ResizeDividor;
+            PointF divisor = Settings.ResizeDividor;
             Rectangle rect = _down ? FRect() : CRect();
             g.FillRectangle(new SolidBrush(Color.LightBlue), rect);
             Pen gridPen = new Pen(Color.Black, 2);
@@ -63,8 +62,8 @@ namespace Resizor
             g.DrawRectangle(new Pen(Color.Red, 2), _window.Position);
         }
 
-        private PointF GetDiv() => new PointF(_screen.Width / (float) Settings.Default.ResizeDividor.X,
-            _screen.Height / (float) Settings.Default.ResizeDividor.Y);
+        private PointF GetDiv() => new PointF(_screen.Width / (float) Settings.ResizeDividor.X,
+            _screen.Height / (float) Settings.ResizeDividor.Y);
 
         private Rectangle CRect() => P2R(F2S(MousePosition, GetDiv()), C2S(MousePosition, GetDiv()));
 
