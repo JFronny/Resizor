@@ -16,7 +16,7 @@
     <Content Include="Resizor.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CC-Functions.W32" Version="1.1.7397.24614" />
+    <PackageReference Include="CC-Functions.W32" Version="1.1.7399.26972" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
